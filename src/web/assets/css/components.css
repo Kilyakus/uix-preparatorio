@@ -1,0 +1,104 @@
+/* Вертикальная панель инструментов — как в эскизе. */
+.property-workspace { display: flex; flex: 1 1 auto; min-height: 0; margin: 0 -4px -4px; }
+.tabs { display: flex; flex: 0 0 30px; flex-direction: column; align-items: center; gap: 2px; width: 30px; padding: 3px 2px; background: #202020; border-right: 1px solid var(--b-border); }
+.tab { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: var(--b-radius); background: transparent; color: var(--b-text-dim); cursor: grab; }
+.tab-glyph { display: inline-grid; place-items: center; font-size: 15px; line-height: 1; }
+.tab:hover { background: var(--b-widget-hover); color: var(--b-text); }
+.tab.active { background: var(--b-accent); color: #fff; }
+.tab.is-docked { box-shadow: inset -2px 0 0 var(--b-accent-hover); }
+.tab.is-drag-target { box-shadow: inset 0 2px var(--b-accent-hover); }
+.tabs.is-drop-target { background: var(--b-accent-soft); }
+.property-scroll { flex: 1 1 auto; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 4px; scrollbar-width: thin; scrollbar-color: #454545 transparent; }
+.property-empty { margin: 8px; color: var(--b-text-faint); font-size: 11px; line-height: 1.4; }
+.tab-content { display: none; min-width: 0; }
+.tab-content.active { display: block; }
+.docked-tool-content { flex: 1 1 auto; min-height: 0; padding: 4px; overflow: auto; }
+.tool-menu { min-width: 270px; max-height: calc(100vh - 38px); overflow-y: auto; scrollbar-width: thin; }
+.tool-user-hidden { display: none !important; }
+.tool-menu-title { padding: 5px 6px 3px; color: var(--b-text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.tool-menu-row { display: flex; align-items: center; gap: 4px; border-radius: var(--b-radius); }
+.tool-menu-row:hover { background: var(--b-widget-hover); }
+.tool-menu-row label { flex: 1 1 auto; min-width: 0; }
+.tool-menu-row .b-check-item:hover { background: transparent; }
+.tool-grip { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--b-text-dim); cursor: grab; font-size: 16px; }
+.tool-menu-hint { padding: 4px 6px; color: var(--b-text-faint); font-size: 10px; line-height: 1.35; }
+.tool-drag-image { padding: 6px 10px; border: 1px solid var(--b-accent); border-radius: var(--b-radius); background: var(--b-widget); color: var(--b-text); font-size: 11px; box-shadow: 0 4px 12px #0008; pointer-events: none; }
+/* Единые регуляторы: подпись и значение над тёмной шкалой, как в макете. */
+.range-row, .anime-morph-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "label value" "track track";
+  align-items: center;
+  gap: 4px 8px;
+  margin: 7px 0;
+  font-size: 11px;
+}
+.range-row > span, .anime-morph-row > span { grid-area: label; min-width: 0; color: var(--b-text-dim); }
+.range-row output, .anime-morph-row output {
+  grid-area: value; color: var(--b-text); text-align: right; font-size: 10px;
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.range-row input[type="range"], .anime-morph-row input[type="range"] {
+  grid-area: track; display: block; width: 100%; height: 18px; margin: 0; padding: 0;
+  border: 0; border-radius: var(--b-radius); appearance: none; -webkit-appearance: none;
+  background: transparent; cursor: pointer;
+}
+.range-row input[type="range"]::-webkit-slider-runnable-track,
+.anime-morph-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 18px; border: 1px solid #151515; border-radius: var(--b-radius); background: var(--b-widget);
+}
+.range-row input[type="range"]::-webkit-slider-thumb,
+.anime-morph-row input[type="range"]::-webkit-slider-thumb {
+  width: 6px; height: 16px; margin-top: 0; border: 1px solid #171717; border-radius: 1px;
+  appearance: none; -webkit-appearance: none; background: #e6e6e6;
+}
+.range-row input[type="range"]::-moz-range-track,
+.anime-morph-row input[type="range"]::-moz-range-track {
+  height: 16px; border: 1px solid #151515; border-radius: var(--b-radius); background: var(--b-widget);
+}
+.range-row input[type="range"]::-moz-range-progress,
+.anime-morph-row input[type="range"]::-moz-range-progress { height: 16px; background: var(--b-widget); }
+.range-row input[type="range"]::-moz-range-thumb,
+.anime-morph-row input[type="range"]::-moz-range-thumb {
+  width: 4px; height: 14px; border: 1px solid #171717; border-radius: 1px; background: #e6e6e6;
+}
+.range-row input[type="range"]:disabled, .anime-morph-row input[type="range"]:disabled { opacity: .45; cursor: default; }
+/* Векторная кнопка сохраняет выравнивание и доступна в обоих состояниях. */
+.fit-collapse svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+[hidden] { display: none !important; }
+.b-app { min-width: 0; }
+.b-properties .panel { display:flex;flex:1 1 auto;flex-direction:column;min-height:0;overflow:hidden;padding:0 4px 4px;background:var(--b-bg); }
+.prep-panel-body {flex:1 1 auto;min-height:0;overflow:auto;padding:8px;color:var(--b-text-dim)}
+.prep-field {display:flex;flex-direction:column;gap:5px;margin:0 0 12px}
+.prep-field label {color:var(--b-text)}
+.prep-field input:not([type=range]):not([type=checkbox]), .prep-field select {width:100%;min-height:25px;border:1px solid #151515;border-radius:var(--b-radius);background:var(--b-field);padding:3px 5px}
+.prep-button {border:1px solid #151515;border-radius:var(--b-radius);background:var(--b-widget);color:var(--b-text);padding:5px 9px}
+.prep-button:hover {background:var(--b-widget-hover)}
+.prep-heading {margin:12px 0 7px;padding:5px 7px;background:var(--b-panel-2);border:1px solid var(--b-border);color:var(--b-text);font-weight:500}
+.prep-note {color:var(--b-text-faint);line-height:1.5;margin:4px 0 12px}
+.prep-collapse-body {flex:1 1 auto;min-height:0;overflow:auto}
+.prep-collapsible.is-collapsed .prep-collapse-body {display:none}
+.prep-collapsible.is-collapsed .fit-collapse svg {transform:rotate(180deg)}
+/* Optional project mark in the top bar; remains separate from the title text. */
+img.b-brand-logo { width: 24px; height: 24px; margin: -1px -3px; object-fit: contain; }
+.tool-grip svg { width: 14px; height: 14px; }
+/* Описательный выпадающий список. Попап живёт поверх доковых областей. */
+.prep-control-label { color: var(--b-text); }
+.prep-select { min-width: 0; }
+.prep-select-trigger { display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;padding:5px 6px;border:1px solid #191919;border-radius:var(--b-radius);background:var(--b-widget);color:var(--b-text);text-align:left;font-size:11px; }
+.prep-select-trigger:hover:not(:disabled) { background:var(--b-widget-hover); }
+.prep-select-trigger:disabled { opacity:.5;cursor:default; }
+.prep-select-value { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.prep-select-trigger svg { width:13px;height:13px;flex:0 0 13px; }
+.prep-select-description { margin:2px 0;color:var(--b-text-faint);font-size:10px;line-height:1.3; }
+.prep-select-menu { position:fixed;z-index:1000;box-sizing:border-box;overflow:auto;padding:4px;border:1px solid #4a4a4a;border-radius:var(--b-radius);background:#252525;box-shadow:0 4px 12px #0008; }
+.prep-select-group { padding:5px 6px;color:var(--b-text-faint);font-size:10px; }
+.prep-select-option { display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;gap:1px 6px;padding:5px 6px;border:0;border-radius:3px;background:transparent;color:var(--b-text);text-align:left; }
+.prep-select-option:hover:not(:disabled),.prep-select-option:focus { background:var(--b-widget-hover); }
+.prep-select-option[aria-selected="true"] { background:var(--b-accent-soft); }
+.prep-select-option:disabled { opacity:.4;cursor:default; }
+.prep-select-option-title { font-size:11px; }
+.prep-select-option-description { grid-column:1;color:var(--b-text-faint);font-size:10px;line-height:1.3; }
+.prep-select-option-description:empty { display:none; }
+.prep-select-check { grid-column:2;grid-row:1 / 3;align-self:center;width:13px;height:13px;opacity:0; }
+.prep-select-option[aria-selected="true"] .prep-select-check { opacity:1; }

@@ -1,0 +1,168 @@
+@import '@lumino/widgets/style/index.css';
+/* ============================================================
+   Тема Lumino для Preparatorio
+   ------------------------------------------------------------
+   Lumino (jupyterlab/lumino) приносит только структуру: раскладку,
+   сплиттеры и вкладки. Цвета — наши, из блендеровской палитры
+   (`--b-*` в styles.css), поэтому док не выглядит «чужой» панелью
+   поверх студии.
+   ============================================================ */
+
+/* ---------- хост каркаса ---------- */
+/* Когда включён каркас Lumino, сетка редактора отдаёт ему область:
+   сверху остаётся топбар, всё остальное занимает док со статусной строкой. */
+.b-app.b-app-lumino {
+  grid-template-rows: 28px minmax(0, 1fr);
+}
+.b-main.b-main-lumino {
+  display: block;
+  position: relative;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  background: var(--b-border);
+}
+.b-main.b-main-lumino > .b-lumino-shell {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---------- док ---------- */
+.b-lumino-dock {
+  background: var(--b-border);
+  min-width: 0;
+  min-height: 0;
+}
+.b-lumino-dock .lm-DockPanel-widget {
+  background: var(--b-bg);
+}
+
+/* Панель студии внутри дока: прежняя секция остаётся flex-колонкой. */
+.b-lumino-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---------- значки вкладок ---------- */
+/* Значок берётся из заголовка панели: на вкладке он один, чтобы не дублировать
+   графику дважды в 24 пикселях по вертикали. */
+.b-lumino-dock .lm-TabBar-tabIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  color: var(--b-text-faint);
+}
+.b-lumino-dock .lm-TabBar-tab.lm-mod-current .lm-TabBar-tabIcon {
+  color: var(--b-text);
+}
+.b-lumino-dock .b-tab-icon {
+  display: inline-flex;
+  width: 13px;
+  height: 13px;
+}
+.b-lumino-dock .b-tab-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.35;
+}
+
+/* ---------- вкладки ---------- */
+.b-lumino-dock .lm-DockPanel-tabBar {
+  background: var(--b-header);
+  border-bottom: 1px solid var(--b-border);
+  font: inherit;
+  font-size: 11px;
+  min-height: 22px;
+}
+.b-lumino-dock .lm-TabBar-content {
+  align-items: stretch;
+}
+.b-lumino-dock .lm-TabBar-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  max-height: 22px;
+  min-height: 22px;
+  border: 0;
+  border-right: 1px solid var(--b-line);
+  background: var(--b-header);
+  color: var(--b-text-faint);
+  letter-spacing: .02em;
+  transition: background-color .12s ease, color .12s ease;
+}
+.b-lumino-dock .lm-TabBar-tab:hover {
+  background: var(--b-header-hover);
+  color: var(--b-text);
+}
+.b-lumino-dock .lm-TabBar-tab.lm-mod-current {
+  background: var(--b-panel);
+  color: var(--b-text);
+  box-shadow: inset 0 -2px 0 var(--b-accent);
+}
+.b-lumino-dock .lm-TabBar-tab.lm-mod-current .lm-TabBar-tabLabel {
+  font-weight: 500;
+}
+.b-lumino-dock .lm-TabBar-tab.lm-mod-drag-image {
+  background: var(--b-widget-active);
+  color: var(--b-text);
+  border: 1px solid var(--b-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .55);
+}
+.b-lumino-dock .lm-TabBar-tabCloseIcon:before {
+  color: var(--b-text-faint);
+}
+.b-lumino-dock .lm-TabBar-tabCloseIcon:hover:before {
+  color: var(--b-text);
+}
+
+/* ---------- заголовки панелей без дубля названия ---------- */
+/* Название и значок уже на вкладке, поэтому в заголовке панели они скрыты:
+   остаются только управляющие элементы (меню, поиск, подсказки, кнопки). */
+html[data-shell='lumino'] .b-lumino-area > .b-header .b-header-title,
+html[data-shell='lumino'] .b-lumino-area > .b-header .b-editor-icon {
+  display: none;
+}
+html[data-shell='lumino'] .b-lumino-area > .b-header .b-menu-btn-iconized {
+  padding: 0 6px;
+  gap: 0;
+}
+
+/* ---------- сплиттеры ---------- */
+.b-lumino-dock .lm-DockPanel-handle {
+  background: var(--b-border);
+}
+.b-lumino-dock .lm-DockPanel-handle::after {
+  background: transparent;
+  transition: background-color .12s ease;
+}
+.b-lumino-dock .lm-DockPanel-handle[data-orientation='horizontal']::after {
+  left: -2px;
+  right: -2px;
+}
+.b-lumino-dock .lm-DockPanel-handle[data-orientation='vertical']::after {
+  top: -2px;
+  bottom: -2px;
+}
+.b-lumino-dock .lm-DockPanel-handle:hover::after,
+.b-lumino-dock .lm-DockPanel-handle:focus::after {
+  background: var(--b-accent);
+}
+
+/* Подсветка места, куда встанет перетаскиваемая вкладка. */
+.b-lumino-dock .lm-DockPanel-overlay {
+  background: var(--b-accent-soft);
+  border: 1px solid var(--b-accent);
+  transition: none;
+}
+
+
