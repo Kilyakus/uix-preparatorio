@@ -5,6 +5,8 @@
 [nodejs-preparatorio](https://github.com/Kilyakus/nodejs-preparatorio) без
 изменения публичного API. Библиотека не запускает и не разворачивает сервер.
 
+![Демонстрация интерфейса Preparatorio](docs/images/demo.png)
+
 ## Установка
 
 После публикации репозитория:
