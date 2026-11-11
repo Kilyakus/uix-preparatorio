@@ -145,6 +145,9 @@ export function initToolMenu(shell, { tools, areas, rail, menuItems, detailItems
     order = [...rail.querySelectorAll('.tab')].map(el => el.dataset.tab);
     syncSelection(); button.click();
   });
+  // Полоса инструментов — сортируемая: библиотека даёт ей курсор перетаскивания
+  // и метку для CSS. Рейлы разделов внутри инструмента так не помечаются.
+  rail.classList.add('is-sortable');
   // Навигация стрелками — общий контракт рейла; повторный вызов из панели
   // приложения только допишет машину обзора, а не заведёт второй обработчик.
   const detachKeyboardNav = attachRailKeyboardNav(rail, { selector: '.tab:not([hidden])' });

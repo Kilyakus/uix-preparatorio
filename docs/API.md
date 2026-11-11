@@ -130,6 +130,56 @@ button.addEventListener('click', event => {
 задаёт, какие кнопки считать разделами (по умолчанию `.tab`); меню инструментов
 просит `.tab:not([hidden])`. Функция возвращает отписку.
 
+### Рейл из разметки: `attachRailPanel`
+
+Если полоса разделов уже есть в разметке, библиотека берёт на себя всё
+типовое поведение, а приложению остаётся содержимое разделов.
+
+```js
+import { attachRailPanel } from 'uix-preparatorio';
+
+attachRailPanel({
+  rail: document.querySelector('#propertyTabs'),
+  scroll: document.querySelector('#propertyScroll'),
+  title: document.querySelector('#propertyCurrentTool'),
+  empty: document.querySelector('#propertyEmpty'),
+  labels: { overview: 'Все настройки' },
+  activateDocked: id => shell.isToolDocked(id) && (shell.activateTool(id), true),
+});
+```
+
+| Опция | Назначение |
+| --- | --- |
+| `rail`, `scroll` | полоса кнопок и контейнер содержимого. |
+| `title`, `empty` | название выбранного раздела в шапке и сообщение пустого списка. |
+| `labels.overview` | подпись обзора; в обычном режиме берётся `aria-label` кнопки. |
+| `dataKey` | ключ `dataset` с id раздела (по умолчанию `tab`). |
+| `contentSelector`, `contentIdPrefix` | как найти панели содержимого, если у кнопки нет `aria-controls`. |
+| `isAvailable(button)` | какие кнопки считать разделами (скрытые и отделённые в док не в счёт). |
+| `activateDocked(id)` | клик по отделённому инструменту: вернуть `true`, чтобы библиотека не переключала раздел. |
+| `overview`, `initialId` | своя машина обзора или стартовый раздел. |
+| `onChange(state)` | вызывается после каждой синхронизации. |
+
+Возвращает `{ state, overview, sync, detach }`. `sync()` пересчитывает разметку
+после внешних изменений, `detach()` снимает наблюдение за полосой.
+
+### Рейл из данных: `renderRail`
+
+Если пункты — данные приложения (группы, категории), кнопки рисует библиотека:
+значок (`icon`, `iconPath` или `glyph`), подпись, `aria-selected`, активное
+состояние, заголовок и прокрутка содержимого к началу. Решение о выборе
+принимает `onSelect(id, { active, userAction })` — обычно его передают в
+`createRailOverview`.
+
+```js
+renderRail(rail, groups.map(g => ({ id: g.id, label: g.label, icon: g.svg })), {
+  dataKey: 'animationGroupTab', currentId, overview, title,
+  overviewLabel: 'Все разделы', controls: 'animation-game-tool',
+  isUserAction: overview.isUserAction,
+  onSelect: (id, info) => { overview.select(id, info); repaint(); },
+});
+```
+
 `rerenderRail(rail, dataKey, rebuild)` перерисовывает кнопки без потери фокуса:
 позиция клавиатуры запоминается по `dataset[dataKey]` до перестройки и
 возвращается после, если фокус был на полосе. Без этого навигация стрелками
@@ -199,6 +249,37 @@ select.setValue('basic'); // по умолчанию без вызова onChang
 
 Контроллер также содержит `value`, `selectedOption`, `trigger`, `description` и `menu`. Для созданного через `renderControls` элемента можно получить контроллер через `getCustomSelect(element)`; при переданном `id` элемент отмечен атрибутом `data-control-id`. `destroy()` студии освобождает созданные ею компоненты автоматически.
 
+## Сворачиваемые секции
+
+```js
+import { initCollapsibleSections } from 'uix-preparatorio';
+
+const sections = initCollapsibleSections({
+  root: panelNode,                       // где искать заголовки
+  storage: () => state.sections,         // где помнить свёрнутость
+  persist: () => save(),                 // как сохранить после переключения
+});
+```
+
+Секция — заголовок `.section-heading[data-collapsible]` и всё до следующего
+заголовка. Содержимое переносится в `.section-body`, заголовок получает стрелку,
+`role="button"`, `tabindex="0"` и `aria-expanded`, работает мышью, Enter и
+пробелом. По умолчанию состояние хранится в `state.viewport.sections`; опция
+`storage` отдаёт своё место хранения. `sections.scan()` подключает новые
+заголовки, `sections.refresh()` повторяет раскладку после перерисовки содержимого.
+
+## Ползунки с закрашенной дорожкой
+
+```js
+import { installRangeFillSupport } from 'uix-preparatorio';
+installRangeFillSupport();   // один раз на документ
+```
+
+Chromium не рисует прогресс дорожки, поэтому доля считается скриптом и
+попадает в переменную `--range-fill`; правило в `components.css` превращает её
+в градиент. Поддерживаются ввод, программные изменения (`value`, `min`, `max`)
+и динамически добавленные ползунки. Ручной пересчёт — `syncRangeFills(root)`.
+
 ## Меню
 
 ```js
@@ -240,7 +321,7 @@ layout: {
 - `addPanel(descriptor)`, `removePanel(id)` — добавить или удалить простую панель во время работы. Чтобы восстановить её после перезагрузки, объявите её в `panels`. Сворачиваемые панели и контейнер инструментов должны быть объявлены при инициализации. Динамически добавленные панели не появляются в меню видимости автоматически.
 - `destroy()` — снять основные глобальные обработчики и удалить интерфейс.
 
-Для интеграции с существующей разметкой также доступны `AreaWidget`, `createDetachedWidget`, `serializeConfig`, `resolveConfig`, `initToolMenu`, `installVirtualDockSizing`, `installCompactDockSizing`, `renderControls`, `createCustomSelect`, `getCustomSelect`, `disposeCustomSelects`, `createRailOverview`, `attachRailKeyboardNav` и `rerenderRail`.
+Для интеграции с существующей разметкой также доступны `AreaWidget`, `createDetachedWidget`, `serializeConfig`, `resolveConfig`, `initToolMenu`, `installVirtualDockSizing`, `installCompactDockSizing`, `renderControls`, `createCustomSelect`, `getCustomSelect`, `disposeCustomSelects`, `createRailOverview`, `attachRailKeyboardNav`, `rerenderRail`, `attachRailPanel`, `renderRail`, `initCollapsibleSections`, `installRangeFillSupport`, `syncRangeFills` и `rangeFillRatio`.
 
 ## Логотипы
 

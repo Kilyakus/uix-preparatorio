@@ -21,7 +21,11 @@
   margin: 0;
 }
 .tabs { display: flex; flex: 0 0 30px; flex-direction: column; align-items: center; gap: 2px; width: 30px; padding: 3px 2px; background: #202020; border-right: 1px solid var(--b-border); }
-.tab { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: var(--b-radius); background: transparent; color: var(--b-text-dim); cursor: grab; }
+.tab { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: var(--b-radius); background: transparent; color: var(--b-text-dim); cursor: pointer; }
+/* Перетаскивание обещает только та полоса, где инструменты можно менять
+   местами: меню инструментов помечает её `is-sortable`. Рейл разделов внутри
+   одного инструмента доку не подвластен — там курсор обычный. */
+.tabs.is-sortable .tab { cursor: grab; }
 .tab-glyph { display: inline-grid; place-items: center; font-size: 15px; line-height: 1; }
 /* Значок вкладки. Оба варианта размещения: голый `<svg>` от `iconPath`
    (buildPanel кладёт его прямо в кнопку) и `<svg>` внутри `.tab-glyph`.
@@ -38,6 +42,68 @@
 .tab-content { display: none; min-width: 0; }
 .tab-content.active { display: block; }
 .docked-tool-content { flex: 1 1 auto; min-height: 0; padding: 4px; overflow: auto; }
+/* ---------------------------------------------------------------- области */
+
+/* Тело области под шапкой: рабочая часть панели, в которой живут разделы.
+   Область — flex-колонка, поэтому тело забирает оставшуюся высоту и не
+   выпускает содержимое за свои края. */
+.b-area > .panel-body { display: flex; flex: 1 1 auto; min-width: 0; min-height: 0; }
+
+/* Название выбранного раздела в шапке области. */
+.property-current-tool { min-width: 0; flex: 0 1 auto; padding-left: 4px; color: var(--b-text-dim); font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* Обзор: разделы идут подряд, поэтому каждому нужен зазор снизу — иначе
+   карточки соседних разделов слипаются в один блок. */
+.property-scroll.is-overview > .tab-content.active { margin-bottom: 8px; }
+
+/* --------------------------------------------------------------- секции */
+
+/*
+ * Секция свойств — карточка, как в Rephlexia.
+ *
+ * Заголовок и тело — две половины одной панели: заголовок чуть светлее, тело
+ * темнее и с собственной рамкой. Рамка общая: у заголовка она сверху и по
+ * бокам, у тела — снизу и по бокам; скругления на стыке снимаются, поэтому
+ * пара читается единым блоком, а не двумя отдельными коробками. Внешний
+ * отступ есть только у заголовка — им секция отделяется от предыдущей.
+ */
+.section-heading { display: flex; align-items: center; gap: 5px; min-height: 22px; margin: 4px 0; padding: 4px 6px; background: #2c2c2c; border: 1px solid #191919; border-radius: var(--b-radius); }
+.section-heading > div { flex: 1 1 auto; min-width: 0; }
+.section-heading h2 { margin: 0; color: var(--b-text); font-size: 11.5px; font-weight: 500; }
+.section-heading p { margin: 2px 0 0; color: var(--b-text-faint); font-size: 10px; line-height: 1.3; }
+
+/* Сворачиваемый заголовок ведёт себя как кнопка: и мышью, и с клавиатуры. */
+.section-heading[data-collapsible] { cursor: pointer; user-select: none; }
+.section-heading[data-collapsible]:hover { background: #333; }
+.section-heading[data-collapsible]:focus-visible { outline: 1px solid var(--b-accent); outline-offset: 1px; }
+.section-heading .section-arrow {
+  flex: 0 0 auto; width: 0; height: 0; margin-right: 1px;
+  border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+  border-left: 4.5px solid var(--b-text-dim);
+  transition: transform .12s ease;
+}
+.section-heading[aria-expanded="false"] .section-arrow { transform: rotate(-90deg); }
+.section-heading[aria-expanded="false"] h2 { color: var(--b-text-dim); }
+
+.section-heading[data-collapsible],
+.section-heading[data-collapsible] + .section-body { border: 1px solid var(--b-line); }
+.section-heading[data-collapsible] { margin: 4px 0 0; border-bottom: 0; border-radius: var(--b-radius) var(--b-radius) 0 0; }
+/* Заголовок без тела (свёрнутая секция) — снова полная карточка. */
+.section-heading[data-collapsible][aria-expanded="false"] { margin-bottom: 4px; border-bottom: 1px solid var(--b-line); border-radius: var(--b-radius); }
+.section-heading[data-collapsible][aria-expanded="false"] + .section-body { display: none !important; }
+
+.section-body {
+  display: flex; flex-direction: column; gap: 1px;
+  margin: 0 0 4px; padding: 5px;
+  border-top: 0;
+  border-radius: 0 0 var(--b-radius) var(--b-radius);
+  background: var(--b-panel);
+}
+.section-body[hidden] { display: none !important; }
+
+/* Утилита: подпись только для экранных дикторов. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
 .tool-menu { min-width: 270px; max-height: calc(100vh - 38px); overflow-y: auto; scrollbar-width: thin; }
 .tool-user-hidden { display: none !important; }
 .tool-menu-title { padding: 5px 6px 3px; color: var(--b-text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
@@ -88,11 +154,39 @@
   width: 4px; height: 14px; border: 1px solid #171717; border-radius: 1px; background: #e6e6e6;
 }
 .range-row input[type="range"]:disabled, .anime-morph-row input[type="range"]:disabled { opacity: .45; cursor: default; }
+/*
+ * Закрашенная часть дорожки ползунка.
+ *
+ * Chromium не рисует прогресс у ::-webkit-slider-runnable-track — в отличие от
+ * Firefox, у которого есть ::-moz-range-progress. Поэтому долю считает скрипт
+ * (`range-fill.js`) и кладёт её в переменную `--range-fill`, а дорожка красится
+ * градиентом. Правило идёт после фона дорожки, поэтому перекрывает его.
+ *
+ * Второго серого слоя «зона под бегунком» нет: бегунок шириной 6 px едет на
+ * r·(W−6), и такой слой высовывался бы справа от ручки на всех ползунках.
+ */
+.range-row input[type="range"]::-webkit-slider-runnable-track,
+.anime-morph-row input[type="range"]::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(var(--b-accent), var(--b-accent)) 0 0 / var(--range-fill, 0%) 100% no-repeat,
+    var(--b-widget);
+}
+.range-row input[type="range"]::-moz-range-progress,
+.anime-morph-row input[type="range"]::-moz-range-progress { background: var(--b-accent); }
+.range-row input[type="range"]:disabled::-webkit-slider-runnable-track,
+.anime-morph-row input[type="range"]:disabled::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(#4d4d4d, #4d4d4d) 0 0 / var(--range-fill, 0%) 100% no-repeat,
+    var(--b-widget);
+}
+.range-row input[type="range"]:disabled::-moz-range-progress,
+.anime-morph-row input[type="range"]:disabled::-moz-range-progress { background: #4d4d4d; }
+
 /* Векторная кнопка сохраняет выравнивание и доступна в обоих состояниях. */
 .fit-collapse svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 [hidden] { display: none !important; }
 .b-app { min-width: 0; }
-.b-properties .panel { display:flex;flex:1 1 auto;flex-direction:column;min-height:0;overflow:hidden;padding:0 4px 4px;background:var(--b-bg); }
+.b-properties .panel { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; padding: 0 4px 4px; background: var(--b-bg); scrollbar-width: thin; scrollbar-color: #454545 transparent; }
 .prep-panel-body {flex:1 1 auto;min-height:0;overflow:auto;padding:8px;color:var(--b-text-dim)}
 .prep-field {display:flex;flex-direction:column;gap:5px;margin:0 0 12px}
 .prep-field label {color:var(--b-text)}
