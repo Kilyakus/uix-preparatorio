@@ -42,9 +42,37 @@ const studio = await createStudio({
 | `collapsible`, `collapsed` | Возможность сворачивания и начальное состояние. |
 | `tools` | `true` размещает внутри панели вертикальную полосу инструментов. |
 | `controls` | Массив описаний элементов управления. |
+| `footer` | Содержимое футер-слота: строка HTML, DOM-узел или `(context) => …`. |
 | `render(container, context)` | Функция для собственного содержимого. |
 
 Доступные варианты `mode`: `split-left`, `split-right`, `split-top`, `split-bottom`, `tab-before`, `tab-after`. Значение `ref` — id панели. Если ссылка не задана, используется опорная панель. Не более одной панели может содержать `tools: true`.
+
+### Футер-слот
+
+`footer` создаёт полосу под телом панели — проигрыватель, строку действий,
+счётчики. Слот живёт прямым потомком `section.b-area` с классом `panel-footer`:
+поэтому он прижат к низу области, тянется во всю её ширину (включая зону полосы
+инструментов) и не прокручивается вместе с содержимым. Своих полей и фона у
+слота нет — оформление задаёт содержимое; так полоса совпадает по краям с окном
+при любом внутреннем отступе тела.
+
+```js
+{
+  id: 'animations',
+  title: 'Анимации',
+  render(container) { /* карточки, списки, разделы */ },
+  footer: context => {
+    const player = document.createElement('div');
+    player.className = 'animation-player';
+    return player; // можно вернуть и строку с HTML
+  },
+}
+```
+
+Готовый слот доступен как `studio.getFooter(id)`, поэтому его можно наполнять и
+после инициализации. Геометрию слота задаёт CSS-класс `.panel-footer` — если
+разметку строит приложение мимо `buildPanel` (своя оболочка на `AreaWidget`),
+достаточно положить элемент с этим классом прямым потомком `section.b-area`.
 
 `render` вызывается при создании панели до завершения инициализации, поэтому `context.studio` в момент вызова ещё не доступен. В обработчиках событий, вызванных после инициализации, это свойство возвращает экземпляр студии.
 
@@ -62,6 +90,50 @@ const studio = await createStudio({
 По умолчанию инструмент появляется в боковой полосе. `iconPath` задаёт SVG-значок; если он не указан, можно передать текстовый `glyph`. `rail: false` создаёт вложенный блок в первом разделе. Для инструментов нужны уникальные id, не совпадающие с id панелей. Поддерживаются `controls` и `render`, как для панелей.
 
 Инструмент можно отделить через меню или перетащить в док. Перемещается существующий DOM-узел: поля и обработчики остаются живыми. Положение вынесенных инструментов восстанавливается, если они объявлены в конфигурации при следующем запуске.
+
+### Обзор разделов в полосе инструментов
+
+Полоса инструментов по умолчанию однозначная: активен ровно один раздел.
+Библиотека даёт готовую машину состояний «обзор», в которой повторный клик по
+активной кнопке её «отжимает» и показывает все разделы сразу. Разметку и
+отрисовку приложение оставляет себе — библиотека владеет только состоянием.
+
+```js
+import { createRailOverview, rerenderRail } from 'uix-preparatorio';
+
+const overview = createRailOverview({
+  initialId: 'standing',
+  onChange: ({ currentId, overview }) => paint(currentId, overview),
+});
+
+button.addEventListener('click', event => {
+  overview.select(group.id, {
+    active: button.classList.contains('active'),
+    userAction: overview.isUserAction(event),
+  });
+});
+```
+
+`overview.state` — `{ currentId, overview }`. `select(id, { active, userAction })`
+включает обзор при повторном клике по активному разделу (`userAction: true`) и
+выключает при клике по любому другому; выбранный раздел при включении обзора
+сохраняется, чтобы содержимое можно было вернуть. `isUserAction` отличает
+настоящий ввод от синтетического `.click()`, а `beginKeyboardSelection()` перед
+таким кликом сообщает, что он пришёл с клавиатуры. `setCurrent(id)` фиксирует
+раздел, не меняя режим, — нужно, когда состав разделов изменился сам (например,
+скрыли текущую группу). `close()` выходит из обзора, оставляя выбор на месте.
+
+Клавиатуру полосы объявляет `attachRailKeyboardNav(rail, { overview, selector })`:
+стрелки, `Home` и `End` переводят выбор, `Enter` и пробел помечают активацию как
+пользовательскую. Вызов идемпотентен — полосу объявляют и меню инструментов, и
+панель приложения, а два обработчика дали бы двойной шаг стрелки. `selector`
+задаёт, какие кнопки считать разделами (по умолчанию `.tab`); меню инструментов
+просит `.tab:not([hidden])`. Функция возвращает отписку.
+
+`rerenderRail(rail, dataKey, rebuild)` перерисовывает кнопки без потери фокуса:
+позиция клавиатуры запоминается по `dataset[dataKey]` до перестройки и
+возвращается после, если фокус был на полосе. Без этого навигация стрелками
+работает только до первой перерисовки.
 
 ## Элементы управления
 
@@ -163,11 +235,12 @@ layout: {
 - `studio.dock`, `studio.panels`, `studio.root` — док, виджеты и корневой элемент.
 - `saveLayout()`, `restoreLayout()`, `resetLayout()` — сохранение, восстановление и сброс расположения.
 - `setAreaVisible(id, visible)`, `isAreaVisible(id)` — видимость панели.
+- `getFooter(id)` — узел футер-слота панели, объявленной с `footer`.
 - `createToolWidget(id)`, `returnTool(id)`, `isToolDocked(id)`, `activateTool(id)` — работа с отделяемыми инструментами. `createToolWidget` создаёт виджет, но не помещает его в док автоматически.
 - `addPanel(descriptor)`, `removePanel(id)` — добавить или удалить простую панель во время работы. Чтобы восстановить её после перезагрузки, объявите её в `panels`. Сворачиваемые панели и контейнер инструментов должны быть объявлены при инициализации. Динамически добавленные панели не появляются в меню видимости автоматически.
 - `destroy()` — снять основные глобальные обработчики и удалить интерфейс.
 
-Для интеграции с существующей разметкой также доступны `AreaWidget`, `createDetachedWidget`, `serializeConfig`, `resolveConfig`, `initToolMenu`, `installVirtualDockSizing`, `installCompactDockSizing`, `renderControls`, `createCustomSelect`, `getCustomSelect` и `disposeCustomSelects`.
+Для интеграции с существующей разметкой также доступны `AreaWidget`, `createDetachedWidget`, `serializeConfig`, `resolveConfig`, `initToolMenu`, `installVirtualDockSizing`, `installCompactDockSizing`, `renderControls`, `createCustomSelect`, `getCustomSelect`, `disposeCustomSelects`, `createRailOverview`, `attachRailKeyboardNav` и `rerenderRail`.
 
 ## Логотипы
 

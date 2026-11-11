@@ -1,4 +1,5 @@
 import { MimeData } from '@lumino/coreutils';
+import { attachRailKeyboardNav } from './rail-overview.js';
 import { Drag } from '@lumino/dragdrop';
 
 const TOOL_MIME = 'application/x-preparatorio-tool';
@@ -144,19 +145,14 @@ export function initToolMenu(shell, { tools, areas, rail, menuItems, detailItems
     order = [...rail.querySelectorAll('.tab')].map(el => el.dataset.tab);
     syncSelection(); button.click();
   });
-  rail.addEventListener('keydown', event => {
-    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-    const visible = [...rail.querySelectorAll('.tab:not([hidden])')];
-    if (!visible.length) return;
-    const index = visible.indexOf(document.activeElement);
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? visible.length - 1 :
-      (index + (event.key === 'ArrowDown' ? 1 : -1) + visible.length) % visible.length;
-    event.preventDefault(); visible[next].focus(); visible[next].click();
-  });
+  // Навигация стрелками — общий контракт рейла; повторный вызов из панели
+  // приложения только допишет машину обзора, а не заведёт второй обработчик.
+  const detachKeyboardNav = attachRailKeyboardNav(rail, { selector: '.tab:not([hidden])' });
   window.addEventListener(toolsChangedEvent, syncSelection);
   window.addEventListener(areasChangedEvent, syncSelection);
   syncSelection();
   return { dispose() {
+    detachKeyboardNav();
     window.removeEventListener(toolsChangedEvent, syncSelection);
     window.removeEventListener(areasChangedEvent, syncSelection);
   } };

@@ -1,6 +1,6 @@
 {
   "name": "uix-preparatorio",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Браузерная библиотека интерфейса редакторов Preparatorio без серверного хоста",
   "type": "module",
   "files": [

@@ -50,6 +50,7 @@ export async function createStudio(config) {
   const panels={},definitions=new Map(),toolWidgets=new Map(),toolNodes=new Map(),anchors=new Map(),collapsible=[];
   let rail=null,empty=null,toolMenu=null,suppress=false;
   const context={get studio(){return api}};
+  const footerNodes=new Map();
   function buildPanel(def){
     if(panels[def.id])throw new Error(`Duplicate panel: ${def.id}`);
     const node=el('section','b-area');node.setAttribute('aria-label',def.title||def.id);if(def.className)node.classList.add(...def.className.split(/\s+/).filter(Boolean));
@@ -77,6 +78,17 @@ export async function createStudio(config) {
       const btn=el('button','b-icon-btn fit-collapse');btn.type='button';btn.innerHTML='<svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3.3 5.7 8 10.3l4.7-4.6"></path></svg>';header.append(btn);
       const apply=()=>{node.classList.toggle('is-collapsed',collapsed);body.hidden=collapsed;btn.setAttribute('aria-expanded',String(!collapsed));btn.setAttribute('aria-label',collapsed?`Развернуть ${def.title}`:`Свернуть ${def.title}`);btn.title=btn.getAttribute('aria-label');emit(events.collapse)};btn.addEventListener('click',()=>{collapsed=!collapsed;try{localStorage.setItem(key,String(collapsed))}catch{}apply()});apply();
     }
+    // Футер-слот: полоса под телом области (проигрыватель, панель действий,
+    // счётчики). Живёт прямым потомком `section.b-area`, поэтому тянется во всю
+    // ширину и не прокручивается вместе с содержимым. Содержимое задаётся в
+    // конфиге панели как строка (HTML), готовый узел или функция `(context)=>…`;
+    // дальше к нему можно обращаться через `getFooter(id)` и обновлять на месте.
+    if(def.footer){
+      const footer=el('footer','panel-footer');footer.dataset.area=def.id;
+      const content=typeof def.footer==='function'?def.footer(context):def.footer;
+      if(typeof content==='string')footer.innerHTML=content;else if(content)footer.append(content);
+      node.append(footer);footerNodes.set(def.id,footer);
+    }
     const widget=new AreaWidget(node,{id:def.id,title:def.title||def.id,iconPath:def.iconPath});panels[def.id]=widget;definitions.set(def.id,def);if(def.collapsible)collapsible.push(widget);
     return widget;
   }
@@ -94,7 +106,7 @@ export async function createStudio(config) {
   if(!restoreLayout())for(const id of hidden){const w=panels[id];if(w&&id!==anchorId){w.parent=null;parking.append(w.node)}}
   dock.layoutModified.connect(saveLayout);
   const sizing=installVirtualDockSizing(dock,collapsible,{adjust:BoxEngine.adjust,saveLayout,storageKey:`${namespace}.expanded-tab-heights.v1`,collapseEvent:events.collapse,resetEvent:events.reset});
-  api={app,dock,panels,root:appRoot,saveLayout,restoreLayout,resetLayout,setAreaVisible,isAreaVisible:id=>!hidden.has(id),createToolWidget,returnTool,getToolNode:id=>toolNodes.get(id),isToolDocked:id=>toolWidgets.has(id),activateTool:id=>{const w=toolWidgets.get(id);if(w&&dock.contains(w))dock.activateWidget(w)},addPanel(def){if(!def.id||definitions.has(def.id)||toolNodes.has(def.id)||def.tools||def.collapsible)throw new Error('Invalid dynamic panel; declare tools and collapsible panels in initial config');const widget=buildPanel(def);addToDock(def);saveLayout();return widget},removePanel(id){if(id===anchorId||!definitions.has(id))return false;const widget=panels[id];if(dock.contains(widget))widget.parent=null;disposeCustomSelects(widget.node);widget.dispose();delete panels[id];definitions.delete(id);hidden.delete(id);persistHidden();saveLayout();return true},destroy(){for(const widget of Object.values(panels))disposeCustomSelects(widget.node);toolMenu?.dispose();sizing.dispose();dock.layoutModified.disconnect(saveLayout);document.removeEventListener('click',onDocumentClick);document.removeEventListener('contextmenu',app);document.removeEventListener('keydown',app,true);document.removeEventListener('keyup',app,true);window.removeEventListener('resize',app);box.dispose();parking.remove();mount.replaceChildren()}};
+  api={app,dock,panels,root:appRoot,saveLayout,restoreLayout,resetLayout,setAreaVisible,isAreaVisible:id=>!hidden.has(id),createToolWidget,returnTool,getToolNode:id=>toolNodes.get(id),getFooter:id=>footerNodes.get(id),isToolDocked:id=>toolWidgets.has(id),activateTool:id=>{const w=toolWidgets.get(id);if(w&&dock.contains(w))dock.activateWidget(w)},addPanel(def){if(!def.id||definitions.has(def.id)||toolNodes.has(def.id)||def.tools||def.collapsible)throw new Error('Invalid dynamic panel; declare tools and collapsible panels in initial config');const widget=buildPanel(def);addToDock(def);saveLayout();return widget},removePanel(id){if(id===anchorId||!definitions.has(id))return false;const widget=panels[id];if(dock.contains(widget))widget.parent=null;disposeCustomSelects(widget.node);widget.dispose();delete panels[id];definitions.delete(id);hidden.delete(id);footerNodes.delete(id);persistHidden();saveLayout();return true},destroy(){for(const widget of Object.values(panels))disposeCustomSelects(widget.node);toolMenu?.dispose();sizing.dispose();dock.layoutModified.disconnect(saveLayout);document.removeEventListener('click',onDocumentClick);document.removeEventListener('contextmenu',app);document.removeEventListener('keydown',app,true);document.removeEventListener('keyup',app,true);window.removeEventListener('resize',app);box.dispose();parking.remove();mount.replaceChildren()}};
   if(!rail){rail=el('nav','tabs');empty=el('p','property-empty');}
   {const defs=tools.map(t=>({...t,rail:t.rail!==false}));toolMenu=initToolMenu(api,{tools:defs,areas:panelsConfig.filter(p=>p.id!==anchorId&&p.hideable!==false).map(p=>({id:p.id,label:p.title||p.id})),rail,menuItems:toolItems,detailItems,areaItems,empty,storageKey:`${namespace}.tools.v1`,viewportId:anchorId,toolsChangedEvent:events.tools,areasChangedEvent:events.areas});}
   saveLayout();return api;

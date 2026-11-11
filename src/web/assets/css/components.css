@@ -1,8 +1,33 @@
-/* Вертикальная панель инструментов — как в эскизе. */
-.property-workspace { display: flex; flex: 1 1 auto; min-height: 0; margin: 0 -4px -4px; }
+/* Вертикальная панель инструментов — как в эскизе.
+   `.property-workspace` сам по себе не имеет отрицательных margin'ов: их даёт
+   только обёртка `.panel`, у которой есть встречный `padding: 0 4px 4px`.
+   Так контракт принадлежит библиотеке, а не потребителю — иначе у панели с
+   другим контейнером (без паддинга) рейл вылезал бы за край окна. */
+.property-workspace { display: flex; flex: 1 1 auto; min-height: 0; }
+.panel .property-workspace { margin: 0 -4px -4px; }
+
+/* Футер-слот области: полоса под телом панели — проигрыватель, строка
+   действий, счётчики. Живёт прямым потомком `section.b-area`, поэтому сам
+   занимает низ области, тянется во всю её ширину (включая зону рейла) и не
+   прокручивается вместе с телом. Полей у слота нет: за внутренние отступы
+   отвечает содержимое, иначе оно «плавало» бы относительно краёв окна.
+   В конфиге панели слот объявляется полем `footer` (`buildPanel`). */
+.b-area > .panel-footer {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-self: stretch;
+  min-width: 0;
+  margin: 0;
+}
 .tabs { display: flex; flex: 0 0 30px; flex-direction: column; align-items: center; gap: 2px; width: 30px; padding: 3px 2px; background: #202020; border-right: 1px solid var(--b-border); }
 .tab { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: var(--b-radius); background: transparent; color: var(--b-text-dim); cursor: grab; }
 .tab-glyph { display: inline-grid; place-items: center; font-size: 15px; line-height: 1; }
+/* Значок вкладки. Оба варианта размещения: голый `<svg>` от `iconPath`
+   (buildPanel кладёт его прямо в кнопку) и `<svg>` внутри `.tab-glyph`.
+   Без явных размеров SVG — замещаемый элемент с умолчанием 300×150 —
+   он раздувает кнопку шириной 16px в содержательном боксе. */
+.tab > svg, .tab-glyph svg { display: block; width: 16px; height: 16px; }
 .tab:hover { background: var(--b-widget-hover); color: var(--b-text); }
 .tab.active { background: var(--b-accent); color: #fff; }
 .tab.is-docked { box-shadow: inset -2px 0 0 var(--b-accent-hover); }
