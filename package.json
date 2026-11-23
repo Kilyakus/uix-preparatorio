@@ -42,5 +42,8 @@
     "ui",
     "javascript"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
 }

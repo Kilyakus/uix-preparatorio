@@ -20,6 +20,17 @@ import { attachRailKeyboardNav, createRailOverview, rerenderRail } from './rail-
 /** Пункт рейла рисуется кнопкой `.tab` — так же, как полоса инструментов. */
 const TAB_CLASS = 'tab';
 
+/** Universal overview action. Not a `.tab`: it is never a draggable tool,
+ * a selectable section or part of the host's section registry. */
+const OVERVIEW_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx=".8"/><rect x="9" y="2" width="5" height="5" rx=".8"/><rect x="2" y="9" width="5" height="5" rx=".8"/><rect x="9" y="9" width="5" height="5" rx=".8"/></svg>';
+function overviewButton(doc, label, selected) {
+  const button=doc.createElement('button');button.type='button';
+  button.className='prep-rail-overview';button.dataset.railOverview='';
+  button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(!!selected));
+  button.title=label;button.innerHTML=OVERVIEW_ICON;return button;
+}
+
+
 /**
  * Кнопка раздела «доступна», если её не скрыли и не вынесли в отдельный док.
  * Скрытая или отделённая вкладка не участвует ни в обзоре, ни в подсчёте.
@@ -73,11 +84,15 @@ export function attachRailPanel({
   initialId = null,
   onChange = null,
   observe = true,
+  includeOverview = true,
 } = {}) {
   if (!rail) return { state: { currentId: null, overview: false }, overview: null, sync: () => {}, detach: () => {} };
 
   const machine = overview ?? createRailOverview({ initialId });
   const overviewLabel = labels.overview ?? 'Все разделы';
+  const doc=rail.ownerDocument ?? globalThis.document;
+  const all=includeOverview && doc ? overviewButton(doc,overviewLabel,machine.state.overview) : null;
+  if(all) rail.insertBefore(all,rail.firstChild ?? null);
 
   const buttons = () => [...rail.querySelectorAll(`.${TAB_CLASS}`)];
   const available = () => buttons().filter((button) => isAvailable(button));
@@ -97,6 +112,7 @@ export function attachRailPanel({
     if (isOverview) for (const button of items) shown.add(contentIdFor(button, dataKey, contentIdPrefix));
     else if (current) shown.add(contentIdFor(current, dataKey, contentIdPrefix));
 
+    all?.setAttribute('aria-pressed',String(isOverview));
     scroll?.classList.toggle('is-overview', isOverview);
     for (const content of scroll?.querySelectorAll(contentSelector) ?? []) {
       if (shown.has(content.id)) content.classList.add('active');
@@ -111,7 +127,16 @@ export function attachRailPanel({
     onChange?.(machine.state);
   }
 
-  rail.addEventListener('click', (event) => {
+  const onRailClick=(event) => {
+    if(all && (event.target===all || all.contains(event.target))) {
+      if(!machine.state.overview) {
+        const current=active();const id=current?.dataset[dataKey] ?? machine.state.currentId ?? available()[0]?.dataset[dataKey] ?? null;
+        machine.select(id,{active:true,userAction:true});
+        for(const item of buttons()){item.classList.remove('active');item.setAttribute('aria-selected','false');}
+        sync();
+      } else scroll?.scrollTo?.({top:0});
+      return;
+    }
     const button = event.target?.closest?.(`.${TAB_CLASS}`);
     if (!button || !rail.contains(button)) return;
     const id = button.dataset[dataKey];
@@ -129,9 +154,10 @@ export function attachRailPanel({
       item.setAttribute('aria-selected', String(on));
     }
     sync();
-  });
+  };
+  rail.addEventListener('click',onRailClick);
 
-  attachRailKeyboardNav(rail, { overview: machine });
+  const offKeyboard=attachRailKeyboardNav(rail, { overview: machine });
 
   // Меню инструментов меняет видимость, порядок и отделённость разделов без
   // кликов по рейлу — состояние надо пересчитать.
@@ -151,7 +177,7 @@ export function attachRailPanel({
     overview: machine,
     sync,
     detach() {
-      observer?.disconnect();
+      observer?.disconnect();rail.removeEventListener('click',onRailClick);offKeyboard();all?.remove();
     },
   };
 }
@@ -190,12 +216,18 @@ export function renderRail(rail, items = [], {
   onSelect = null,
   isUserAction = (event) => !!event?.isTrusted,
   scroll = null,
+  includeOverview = true,
 } = {}) {
   if (!rail) return;
   // Кнопки пересоздаются, поэтому фокус клавиатуры надо вернуть на прежний
   // пункт — иначе стрелки и Enter работают до первой перерисовки.
   rerenderRail(rail, dataKey, () => {
     rail.replaceChildren();
+    if(includeOverview){
+      const all=overviewButton(rail.ownerDocument ?? document,overviewLabel,overview);
+      all.addEventListener('click',()=>{if(!overview)onSelect?.(currentId ?? items[0]?.id ?? null,{active:true,userAction:true});else scroll?.scrollTo?.({top:0});});
+      rail.append(all);
+    }
     for (const item of items) {
       const selected = !overview && item.id === currentId;
       const button = document.createElement('button');

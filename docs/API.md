@@ -158,6 +158,7 @@ attachRailPanel({
 | `isAvailable(button)` | какие кнопки считать разделами (скрытые и отделённые в док не в счёт). |
 | `activateDocked(id)` | клик по отделённому инструменту: вернуть `true`, чтобы библиотека не переключала раздел. |
 | `overview`, `initialId` | своя машина обзора или стартовый раздел. |
+| `includeOverview` | встроенная кнопка обзора; по умолчанию `true`. Для взаимоисключающих режимов используйте `false`. |
 | `onChange(state)` | вызывается после каждой синхронизации. |
 
 Возвращает `{ state, overview, sync, detach }`. `sync()` пересчитывает разметку
@@ -179,6 +180,13 @@ renderRail(rail, groups.map(g => ({ id: g.id, label: g.label, icon: g.svg })), {
   onSelect: (id, info) => { overview.select(id, info); repaint(); },
 });
 ```
+
+Кнопка «Все разделы» добавляется по умолчанию и вызывает `onSelect` как
+повторный пользовательский выбор текущего раздела. Потребитель должен передать
+этот вызов в `createRailOverview` и показать содержимое всех разделов в обзоре;
+для рейлов взаимоисключающих режимов задайте `includeOverview: false`. Подпись
+настраивается через `overviewLabel`, а стили — через CSS-переменные
+`--prep-rail-overview-*`.
 
 `rerenderRail(rail, dataKey, rebuild)` перерисовывает кнопки без потери фокуса:
 позиция клавиатуры запоминается по `dataset[dataKey]` до перестройки и
@@ -338,3 +346,13 @@ await createStudio({
 ```
 
 Адрес изображения может указывать и на собственный логотип приложения.
+
+#### Иконки и действия в `createCustomSelect`
+`createCustomSelect` принимает обычные options/groups с необязательным `icon` — URL изображения, в том числе прозрачный PNG/data URL. Компонент сам отображает его в текущем значении и в списке; изображение декоративное, доступное имя остаётся у текста. Само изображение остаётся прозрачным; у иконки есть тонкая рамка и лёгкий полупрозрачный фон. Их можно настроить через --prep-select-icon-border и --prep-select-icon-bg. В компактном селекте иконка не увеличивает высоту кнопки. `setOptions` и `setValue` обновляют иконки вместе с текстом.
+
+При необходимости `optionActions(option)` возвращает массив `{label, icon?, text?, dataset?, onSelect}` для кнопок возле конкретного варианта. `renderFooter(container, {close})` добавляет, например, действие импорта после списка. Разметку вариантов, портальный popup, фокус и обработчики выбора по-прежнему создаёт и очищает сам компонент. Изображение не передаётся как HTML, а загружается через `img`.
+
+#### Общая прокрутка и структура
+`base.css` задаёт единый стиль нативной прокрутки для областей. Дополнительный класс `prep-scroll` явно отмечает прокручиваемые поверхности и применяет те же токены. Тема настраивается только переменными на `:root`: `--prep-scrollbar-thumb`, `--prep-scrollbar-track`, `--prep-scrollbar-width` (`auto`, `thin` или `none`). Не задавайте отдельный scrollbar для структуры: её контент и другие области используют одинаковые правила. Отдельные узкие панели могут намеренно отключать скроллбар.
+
+`prep-structure`, `prep-structure__workspace`, `prep-structure__content prep-scroll`, `prep-structure__stats`, `prep-structure-search`, `prep-tree-row` и `prep-tree-marker` — общие визуальные примитивы структуры. Их палитра и внутренние отступы наследуются от `--prep-structure-surface`, `--prep-structure-text`, `--prep-structure-muted`, `--prep-structure-hover`, `--prep-structure-padding`, `--prep-structure-stat-margin`, `--prep-structure-marker-border` и `--prep-structure-search-*`. Дерево, данные, раскрытие и выбор остаются ответственностью приложения. Поиск может располагаться в общей шапке с классом `prep-structure-header`.

@@ -122,10 +122,10 @@ export function createRailOverview({ onChange, initialId = null } = {}) {
  */
 export function rerenderRail(rail, dataKey, rebuild) {
   if (!rail) { rebuild?.(); return; }
-  const focusedId = rail.contains(document.activeElement)
-    ? document.activeElement?.dataset?.[dataKey]
-    : null;
+  const active=rail.contains(document.activeElement)?document.activeElement:null;
+  const focusedId=active?.dataset?.[dataKey], focusedOverview=active?.classList?.contains('prep-rail-overview');
   rebuild?.();
+  if(focusedOverview){rail.querySelectorAll('.prep-rail-overview')[0]?.focus();return;}
   if (!focusedId) return;
   const restored = [...rail.querySelectorAll('.tab')]
     .find((button) => button.dataset[dataKey] === focusedId);

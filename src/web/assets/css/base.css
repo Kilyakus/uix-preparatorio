@@ -26,6 +26,10 @@
 
   --b-radius: 4px;
   --b-row: 22px;
+  --prep-scrollbar-thumb: #454545; --prep-scrollbar-track: transparent; --prep-scrollbar-width: auto;
+  --prep-structure-surface: var(--b-bg); --prep-structure-text: var(--b-text); --prep-structure-muted: var(--b-text-dim); --prep-structure-hover: var(--b-widget-hover); --prep-structure-padding: 5px; --prep-structure-stat-margin: 9px 0; --prep-structure-stat-font-size: 10px; --prep-structure-marker-border: var(--b-text-faint);
+  --prep-structure-search-bg: var(--b-field); --prep-structure-search-border: var(--b-border); --prep-structure-search-text: var(--b-text); --prep-structure-search-placeholder: var(--b-text-faint); --prep-structure-search-padding: 0 6px; --prep-structure-search-font-size: 11px;
+
 
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   font-size: 12px;
@@ -34,6 +38,7 @@
   -webkit-font-smoothing: antialiased;
 }
 * { box-sizing: border-box; }
+:where(*) { scrollbar-width: var(--prep-scrollbar-width); scrollbar-color: var(--prep-scrollbar-thumb) var(--prep-scrollbar-track); }
 html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 body {
   background: var(--b-border);
@@ -251,12 +256,9 @@ button:focus-visible, input:focus-visible {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 2px 0 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #454545 transparent;
+  scrollbar-width: var(--prep-scrollbar-width);
+  scrollbar-color: var(--prep-scrollbar-thumb) var(--prep-scrollbar-track);
 }
-.b-outliner-body::-webkit-scrollbar { width: 10px; }
-.b-outliner-body::-webkit-scrollbar-thumb { background: #454545; border-radius: 5px; border: 2px solid var(--b-bg); }
-.b-outliner-body::-webkit-scrollbar-track { background: transparent; }
 .b-tree-row {
   display: flex;
   align-items: center;

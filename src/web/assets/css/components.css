@@ -32,12 +32,17 @@
    Без явных размеров SVG — замещаемый элемент с умолчанием 300×150 —
    он раздувает кнопку шириной 16px в содержательном боксе. */
 .tab > svg, .tab-glyph svg { display: block; width: 16px; height: 16px; }
+.prep-rail-overview { display:grid;place-items:center;flex:0 0 var(--prep-rail-overview-size,26px);box-sizing:border-box;width:var(--prep-rail-overview-size,26px);height:var(--prep-rail-overview-size,26px);padding:var(--prep-rail-overview-padding,5px);border:0;border-radius:var(--b-radius);background:transparent;color:var(--prep-rail-overview-color,var(--b-text-dim));cursor:pointer; }
+.prep-rail-overview svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.35}
+.prep-rail-overview:hover{background:var(--prep-rail-overview-hover-bg,var(--b-widget-hover));color:var(--prep-rail-overview-hover-color,var(--b-text))}
+.prep-rail-overview[aria-pressed="true"]{background:var(--prep-rail-overview-active-bg,var(--b-accent));color:var(--prep-rail-overview-active-color,#fff)}
+.prep-rail-overview:focus-visible{outline:2px solid var(--b-accent-hover);outline-offset:-2px}
 .tab:hover { background: var(--b-widget-hover); color: var(--b-text); }
 .tab.active { background: var(--b-accent); color: #fff; }
 .tab.is-docked { box-shadow: inset -2px 0 0 var(--b-accent-hover); }
 .tab.is-drag-target { box-shadow: inset 0 2px var(--b-accent-hover); }
 .tabs.is-drop-target { background: var(--b-accent-soft); }
-.property-scroll { flex: 1 1 auto; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 4px; scrollbar-width: thin; scrollbar-color: #454545 transparent; }
+.property-scroll { flex: 1 1 auto; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 4px; scrollbar-width: var(--prep-scrollbar-width); scrollbar-color: var(--prep-scrollbar-thumb) var(--prep-scrollbar-track); }
 .property-empty { margin: 8px; color: var(--b-text-faint); font-size: 11px; line-height: 1.4; }
 .tab-content { display: none; min-width: 0; }
 .tab-content.active { display: block; }
@@ -104,7 +109,7 @@
 /* Утилита: подпись только для экранных дикторов. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-.tool-menu { min-width: 270px; max-height: calc(100vh - 38px); overflow-y: auto; scrollbar-width: thin; }
+.tool-menu { min-width: 270px; max-height: calc(100vh - 38px); overflow-y: auto; scrollbar-width: var(--prep-scrollbar-width); }
 .tool-user-hidden { display: none !important; }
 .tool-menu-title { padding: 5px 6px 3px; color: var(--b-text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
 .tool-menu-row { display: flex; align-items: center; gap: 4px; border-radius: var(--b-radius); }
@@ -186,7 +191,7 @@
 .fit-collapse svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 [hidden] { display: none !important; }
 .b-app { min-width: 0; }
-.b-properties .panel { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; padding: 0 4px 4px; background: var(--b-bg); scrollbar-width: thin; scrollbar-color: #454545 transparent; }
+.b-properties .panel { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; padding: 0 4px 4px; background: var(--b-bg); scrollbar-width: var(--prep-scrollbar-width); scrollbar-color: var(--prep-scrollbar-thumb) var(--prep-scrollbar-track); }
 .prep-panel-body {flex:1 1 auto;min-height:0;overflow:auto;padding:8px;color:var(--b-text-dim)}
 .prep-field {display:flex;flex-direction:column;gap:5px;margin:0 0 12px}
 .prep-field label {color:var(--b-text)}
@@ -221,3 +226,43 @@ img.b-brand-logo { width: 24px; height: 24px; margin: -1px -3px; object-fit: con
 .prep-select-option-description:empty { display:none; }
 .prep-select-check { grid-column:2;grid-row:1 / 3;align-self:center;width:13px;height:13px;opacity:0; }
 .prep-select-option[aria-selected="true"] .prep-select-check { opacity:1; }
+
+/* Optional select icons use the same control, palette and interaction states. */
+.prep-select-icon{display:inline-grid;place-items:center;flex:none;box-sizing:border-box;width:32px;height:32px;overflow:hidden;border:1px solid var(--prep-select-icon-border,rgba(255,255,255,.13));border-radius:3px;background:var(--prep-select-icon-bg,rgba(255,255,255,.06))}
+.prep-select-icon img{display:block;width:100%;height:100%;object-fit:contain;background:transparent}
+.prep-select-trigger>.prep-select-icon{width:15px;height:15px}.prep-select-trigger-with-icon .prep-select-value{flex:1}
+.prep-select-option.prep-select-option-with-icon{grid-template-columns:32px minmax(0,1fr) auto;column-gap:8px}
+.prep-select-option-with-icon>.prep-select-icon{grid-column:1;grid-row:1 / 3;align-self:center}
+.prep-select-option-with-icon>.prep-select-option-title,.prep-select-option-with-icon>.prep-select-option-description{grid-column:2}
+.prep-select-option-with-icon>.prep-select-check{grid-column:3}
+.prep-select-option-row{display:flex;align-items:center;gap:2px}.prep-select-option-row>.prep-select-option{flex:1;min-width:0}
+.prep-select-option-action{display:grid;place-items:center;flex:none;width:26px;height:26px;padding:5px;border:0;border-radius:3px;background:transparent;color:var(--b-text-dim);cursor:pointer}
+.prep-select-option-action:hover,.prep-select-option-action:focus-visible{background:var(--b-widget-hover);color:var(--b-text)}.prep-select-option-action img{width:16px;height:16px;object-fit:contain}
+.prep-select-footer{margin-top:4px;padding-top:4px;border-top:1px solid var(--b-border,#4a4a4a)}
+
+/* Shared scrollbar and structure primitives. Host themes via :root. */
+.prep-scroll{scrollbar-width:var(--prep-scrollbar-width);scrollbar-color:var(--prep-scrollbar-thumb) var(--prep-scrollbar-track)}
+.prep-structure{display:flex;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;padding:0;overflow:hidden;background:var(--prep-structure-surface);color:var(--prep-structure-text)}
+.prep-structure__workspace{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+.prep-structure__workspace>nav[hidden]{display:none}
+.prep-structure__content{flex:1;min-width:0;min-height:0;overflow:auto;padding:var(--prep-structure-padding)}
+.prep-structure__stats{margin:var(--prep-structure-stat-margin);color:var(--prep-structure-muted);font-size:var(--prep-structure-stat-font-size);line-height:1.5}
+.prep-structure-header .b-header-hint{display:flex;flex:1;max-width:none;min-width:0;overflow:visible;padding:0;border:0;background:transparent}
+.prep-structure-header .b-header-spacer{flex:0}
+.prep-structure-search{display:flex;flex:1;align-items:center;min-width:0;height:19px;box-sizing:border-box;margin:0 4px;padding:var(--prep-structure-search-padding);border:1px solid var(--prep-structure-search-border);border-radius:var(--b-radius);background:var(--prep-structure-search-bg)}
+.prep-structure-search input[type=search]{display:block;width:100%;min-width:0;height:17px;margin:0;padding:0;border:0;outline:0;background:transparent;color:var(--prep-structure-search-text);font-family:inherit;font-size:var(--prep-structure-search-font-size);font-weight:400;line-height:normal;text-transform:none;letter-spacing:normal}
+.prep-structure-search input::placeholder{color:var(--prep-structure-search-placeholder);opacity:1}
+.prep-structure-search:focus-within{outline:1px solid var(--b-accent)}
+.prep-tree-row{display:flex;align-items:center;gap:5px;min-height:27px;font-size:11px;border-radius:3px}
+.prep-tree-row:hover,.prep-tree-row.is-selected{background:var(--prep-structure-hover)}
+.prep-tree-row button{width:22px;min-width:22px;height:22px;padding:0;border:0;background:transparent;color:var(--prep-structure-muted);cursor:pointer}
+.prep-tree-row button:hover:not(:disabled){background:var(--prep-structure-hover)}
+.prep-tree-row .ai-tree-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.prep-tree-row small{font-size:9px;color:var(--prep-structure-muted)}
+.prep-tree-marker{display:block;flex:0 0 9px;width:9px;height:9px;box-sizing:border-box;border:1px solid var(--prep-structure-marker-border);border-radius:50%}
+
+/* The structure primitive may be nested inside a host scope with its own
+   surface and button defaults; keep its layout independent of the host. */
+.ai-scope.ai-structure.prep-structure{display:flex;flex-direction:column;padding:0;overflow:hidden;background:var(--prep-structure-surface);color:var(--prep-structure-text)}
+.ai-scope.prep-structure .prep-tree-row button{width:22px;min-width:22px;height:22px;padding:0;border:0;background:transparent;color:var(--prep-structure-muted)}
+.ai-scope.prep-structure .prep-tree-row button:hover:not(:disabled){background:var(--prep-structure-hover)}

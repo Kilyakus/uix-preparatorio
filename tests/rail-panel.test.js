@@ -95,17 +95,19 @@ test('renderRail строит кнопки из пунктов и отдаёт �
       onSelect: (id, info) => picks.push([id, info]),
     });
 
-    assert.equal(rail.children.length, 2);
-    assert.deepEqual(rail.children.map((b) => b.dataset.animationGroupTab), ['standing', 'dance']);
-    assert.deepEqual(rail.children.map((b) => b.classList.contains('active')), [false, true]);
-    assert.deepEqual(rail.children.map((b) => b.getAttribute('aria-selected')), ['false', 'true']);
+    assert.equal(rail.children.length, 3);
+    assert.equal(rail.children[0].getAttribute('aria-label'), 'Все разделы');
+    assert.equal(rail.children[0].getAttribute('aria-pressed'), 'false');
+    assert.deepEqual(rail.children.slice(1).map((b) => b.dataset.animationGroupTab), ['standing', 'dance']);
+    assert.deepEqual(rail.children.filter(b=>b.classList.contains('tab')).map((b) => b.classList.contains('active')), [false, true]);
+    assert.deepEqual(rail.children.slice(1).map((b) => b.getAttribute('aria-selected')), ['false', 'true']);
     assert.equal(title.textContent, 'Реакции');
-    assert.match(rail.children[0].innerHTML, /<svg>/);
-    assert.match(rail.children[1].innerHTML, /tab-glyph/);
+    assert.match(rail.children[1].innerHTML, /<svg>/);
+    assert.match(rail.children[2].innerHTML, /tab-glyph/);
 
-    rail.children[1].dispatch('click', { isTrusted: true });
+    rail.children[2].dispatch('click', { isTrusted: true });
     assert.deepEqual(picks.at(-1), ['dance', { active: true, userAction: true }]);
-    rail.children[0].dispatch('click', { isTrusted: false });
+    rail.children[1].dispatch('click', { isTrusted: false });
     assert.deepEqual(picks.at(-1), ['standing', { active: false, userAction: false }]);
   } finally { globalThis.document = realDocument; }
 });
@@ -122,9 +124,10 @@ test('renderRail в обзоре не оставляет активных кно
       title,
       overviewLabel: 'Все настройки',
     });
-    assert.deepEqual(rail.children.map((b) => b.classList.contains('active')), [false, false]);
+    assert.deepEqual(rail.children.filter(b=>b.classList.contains('tab')).map((b) => b.classList.contains('active')), [false, false]);
     assert.equal(title.textContent, 'Все настройки');
     assert.equal(title.hidden, false);
+    assert.equal(rail.children[0].getAttribute('aria-pressed'),'true');
   } finally { globalThis.document = realDocument; }
 });
 
@@ -187,4 +190,28 @@ test('attachRailPanel синхронизирует содержимое, заг�
   assert.equal(rail.children[1].classList.contains('active'), true);
   assert.equal(rail.children[1].getAttribute('aria-selected'), 'true');
   panel.detach();
+});
+
+test('встроенный обзор: click, доступность, фокус, отключение и очистка', async () => {
+  const { JSDOM } = await import('jsdom');
+  const dom=new JSDOM('<nav><button class="tab active" data-tab="a" aria-selected="true" aria-label="Первый"></button><button class="tab" data-tab="b" aria-selected="false" aria-label="Второй"></button></nav><div><section id="tab-a" class="tab-content"></section><section id="tab-b" class="tab-content"></section></div>');
+  const oldDoc=globalThis.document;globalThis.document=dom.window.document;
+  try {
+    const rail=document.querySelector('nav'),scroll=document.querySelector('div');
+    const panel=attachRailPanel({rail,scroll,observe:false});
+    const all=rail.querySelector('.prep-rail-overview');
+    assert.equal(all.getAttribute('aria-label'),'Все разделы');assert.equal(all.getAttribute('aria-pressed'),'false');
+    all.click();assert.equal(panel.state.overview,true);assert.equal(all.getAttribute('aria-pressed'),'true');
+    assert.equal(scroll.querySelectorAll('.active').length,2);
+    panel.detach();assert.equal(rail.querySelector('.prep-rail-overview'),null);
+    const without=attachRailPanel({rail,scroll,observe:false,includeOverview:false});
+    assert.equal(rail.querySelector('.prep-rail-overview'),null);without.detach();
+    const items=[{id:'a',label:'Первый'},{id:'b',label:'Второй'}];let selected=[];
+    const render=(overview=false)=>renderRail(rail,items,{currentId:'a',overview,onSelect:(id,info)=>selected.push([id,info])});
+    render();rail.querySelector('.prep-rail-overview').focus();rail.querySelector('.prep-rail-overview').click();
+    assert.deepEqual(selected[0],['a',{active:true,userAction:true}]);render(true);
+    assert.equal(document.activeElement,rail.querySelector('.prep-rail-overview'));
+    assert.equal(document.activeElement.getAttribute('aria-pressed'),'true');
+    renderRail(rail,items,{includeOverview:false});assert.equal(rail.querySelector('.prep-rail-overview'),null);
+  } finally { globalThis.document=oldDoc;dom.window.close(); }
 });
